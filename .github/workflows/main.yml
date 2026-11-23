@@ -19,7 +19,6 @@ jobs:
             D=$(dirname "$(find project -name settings.gradle | head -1)")
           fi
           echo "PROJECT_DIR=$D" >> $GITHUB_ENV
-          ls -la "$D"
 
       - uses: actions/setup-java@v4
         with:
@@ -37,9 +36,22 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build debug APK
-        run: cd "$PROJECT_DIR" && gradle assembleDebug --stacktrace
+        run: |
+          LOG=$GITHUB_WORKSPACE/build.log
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --console=plain > "$LOG" 2>&1 || {
+            echo "===== PENYEBAB ERROR ====="
+            grep -A25 "What went wrong" "$LOG" || tail -40 "$LOG"
+            exit 1
+          }
 
       - uses: actions/upload-artifact@v4
         with:
           name: WebWindow-debug-apk
           path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/app-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log
+          path: build.log
