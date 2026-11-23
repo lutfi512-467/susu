@@ -39,7 +39,7 @@ jobs:
         run: |
           LOG=$GITHUB_WORKSPACE/build.log
           cd "$PROJECT_DIR"
-          gradle assembleDebug --console=plain > "$LOG" 2>&1 || {
+            gradle assembleDebug --no-parallel --max-workers=1 --console=plain > "$LOG" 2>&1 || {
             echo "===== PENYEBAB ERROR ====="
             grep -A25 "What went wrong" "$LOG" || tail -40 "$LOG"
             exit 1
